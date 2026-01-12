@@ -1,35 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import { useSocket } from "./hooks/useSocket.js";
+import { useChat } from "./hooks/useChat.js";
+import { useUI } from "./hooks/useUI.js";
+import LoadingScreen from "./components/LoadingScreen";
+import ChatHeader from "./components/ChatHeader";
+import ChatContainer from "./components/ChatContainer";
 
 function App() {
-  const [count, setCount] = useState(0)
+  // 커스텀 훅들
+  const { socket, isConnected, isLoadingHistory } = useSocket();
+  const { messages, isStreaming, sendMessage, clearConversation } = useChat(
+    socket,
+    isConnected
+  );
+  const { messagesEndRef, inputRef, formatTime } = useUI(
+    messages,
+    "",
+    isStreaming,
+    isConnected
+  );
+
+  // 로딩 상태 표시
+  if (isLoadingHistory) {
+    return <LoadingScreen />;
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="App">
+      <ChatHeader
+        isConnected={isConnected}
+        messagesCount={messages.length}
+        onClearConversation={clearConversation}
+        isStreaming={isStreaming}
+      />
+      <ChatContainer
+        messages={messages}
+        onSendMessage={sendMessage}
+        isStreaming={isStreaming}
+        isConnected={isConnected}
+        formatTime={formatTime}
+        messagesEndRef={messagesEndRef}
+        inputRef={inputRef}
+      />
+    </div>
+  );
 }
 
-export default App
+export default App;
